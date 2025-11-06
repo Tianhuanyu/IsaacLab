@@ -9,7 +9,7 @@ Docking direct workflow environment registration.
 
 import gymnasium as gym
 
-from isaaclab_tasks.direct.factory import agents as factory_agents
+from . import agents as docking_agents
 
 from .docking_env import DockingEnv
 from .docking_env_cfg import DockingEnvCfg
@@ -22,6 +22,6 @@ gym.register(
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": DockingEnvCfg,
-        "rl_games_cfg_entry_point": f"{factory_agents.__name__}:rl_games_ppo_cfg.yaml",
+        "rl_games_cfg_entry_point": f"{docking_agents.__name__}:rl_games_ppo_cfg.yaml",
     },
 )
