@@ -1,7 +1,7 @@
 """Docking-specific task configuration decoupled from the Factory task definitions."""
 
 import isaaclab.sim as sim_utils
-from isaaclab.assets import ArticulationCfg
+from isaaclab.assets import ArticulationCfg, RigidObjectCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR
 
@@ -36,7 +36,7 @@ class DockRobotCfg:
 
 @configclass
 class DockHole8mm(DockFixedAssetCfg):
-    usd_path = f"{ASSET_DIR}/factory_hole_8mm.usd"
+    usd_path = "/home/thy/IsaacLab/source/isaaclab_tasks/isaaclab_tasks/direct/docking/meshes/trocar_8mm.usd"
     diameter = 0.0081
     height = 0.025
     base_height = 0.0
@@ -48,6 +48,38 @@ class DockPeg8mm(DockHeldAssetCfg):
     diameter = 0.007986
     height = 0.050
     mass = 0.019
+
+
+@configclass
+class HoleImpedanceAxisCfg:
+    stiffness: float = 0.0
+    damping: float = 0.0
+    max_force: float = 0.0
+    limit: tuple[float, float] = (0.0, 0.0)
+
+
+@configclass
+class DockHoleImpedanceCfg:
+    """Axis-wise impedance controller parameters for the compliant trocar joint."""
+
+    transX: HoleImpedanceAxisCfg = HoleImpedanceAxisCfg(
+        stiffness=20000.0, damping=400.0, max_force=1.0e6, limit=(-0.001, 0.001)
+    )
+    transY: HoleImpedanceAxisCfg = HoleImpedanceAxisCfg(
+        stiffness=20000.0, damping=400.0, max_force=1.0e6, limit=(-0.001, 0.001)
+    )
+    transZ: HoleImpedanceAxisCfg = HoleImpedanceAxisCfg(
+        stiffness=30000.0, damping=600.0, max_force=1.0e6, limit=(-0.0005, 0.0005)
+    )
+    rotX: HoleImpedanceAxisCfg = HoleImpedanceAxisCfg(
+        stiffness=200.0, damping=8.0, max_force=1.0e6, limit=(-0.0523599, 0.0523599)
+    )
+    rotY: HoleImpedanceAxisCfg = HoleImpedanceAxisCfg(
+        stiffness=200.0, damping=8.0, max_force=1.0e6, limit=(-0.0523599, 0.0523599)
+    )
+    rotZ: HoleImpedanceAxisCfg = HoleImpedanceAxisCfg(
+        stiffness=300.0, damping=10.0, max_force=1.0e6, limit=(-0.0349066, 0.0349066)
+    )
 
 
 @configclass
@@ -90,8 +122,11 @@ class DockTask:
     action_grad_penalty_scale: float = 0.0
     ee_success_yaw: float = 0.0
 
+    # Impedance-controlled joint that connects the trocar (hole) to ground.
+    hole_impedance: DockHoleImpedanceCfg = DockHoleImpedanceCfg()
+
     # Asset articulations -----------------------------------------------------------------
-    fixed_asset: ArticulationCfg = ArticulationCfg(
+    fixed_asset: RigidObjectCfg = RigidObjectCfg(
         prim_path="/World/envs/env_.*/FixedAsset",
         spawn=sim_utils.UsdFileCfg(
             usd_path=fixed_asset_cfg.usd_path,
@@ -109,16 +144,17 @@ class DockTask:
                 max_contact_impulse=1e32,
             ),
             mass_props=sim_utils.MassPropertiesCfg(mass=fixed_asset_cfg.mass),
-            collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.005, rest_offset=0.0),
-            articulation_props=sim_utils.ArticulationRootPropertiesCfg(fix_root_link=False),
+            collision_props=sim_utils.CollisionPropertiesCfg(
+                contact_offset=0.005,
+                rest_offset=0.0,
+            ),
         ),
-        init_state=ArticulationCfg.InitialStateCfg(
+        init_state=RigidObjectCfg.InitialStateCfg(
             pos=(0.6, 0.0, 0.05),
             rot=(1.0, 0.0, 0.0, 0.0),
-            joint_pos={},
-            joint_vel={},
+            lin_vel=(0.0, 0.0, 0.0),
+            ang_vel=(0.0, 0.0, 0.0),
         ),
-        actuators={},
     )
 
     held_asset: ArticulationCfg = ArticulationCfg(
@@ -139,7 +175,10 @@ class DockTask:
                 max_contact_impulse=1e32,
             ),
             mass_props=sim_utils.MassPropertiesCfg(mass=held_asset_cfg.mass),
-            collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.005, rest_offset=0.0),
+            collision_props=sim_utils.CollisionPropertiesCfg(
+                contact_offset=0.005,
+                rest_offset=0.0,
+            ),
         ),
         init_state=ArticulationCfg.InitialStateCfg(
             pos=(0.0, 0.4, 0.1),
@@ -158,4 +197,6 @@ __all__ = [
     "DockRobotCfg",
     "DockHole8mm",
     "DockPeg8mm",
+    "HoleImpedanceAxisCfg",
+    "DockHoleImpedanceCfg",
 ]

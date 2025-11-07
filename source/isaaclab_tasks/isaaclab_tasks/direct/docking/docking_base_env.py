@@ -7,7 +7,7 @@ import carb
 import isaacsim.core.utils.torch as torch_utils
 
 import isaaclab.sim as sim_utils
-from isaaclab.assets import Articulation
+from isaaclab.assets import Articulation, RigidObject
 from isaaclab.envs import DirectRLEnv
 from isaaclab.sim.spawners.from_files import GroundPlaneCfg, spawn_ground_plane
 from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
@@ -86,7 +86,7 @@ class DockingBaseEnv(DirectRLEnv):
         )
 
         self._robot = Articulation(self.cfg.robot)
-        self._fixed_asset = Articulation(self.cfg_task.fixed_asset)
+        self._fixed_asset = RigidObject(self.cfg_task.fixed_asset)
         self._held_asset = Articulation(self.cfg_task.held_asset)
 
         self.scene.clone_environments(copy_from_source=False)
@@ -94,7 +94,7 @@ class DockingBaseEnv(DirectRLEnv):
             self.scene.filter_collisions()
 
         self.scene.articulations["robot"] = self._robot
-        self.scene.articulations["fixed_asset"] = self._fixed_asset
+        self.scene.rigid_objects["fixed_asset"] = self._fixed_asset
         self.scene.articulations["held_asset"] = self._held_asset
 
         light_cfg = sim_utils.DomeLightCfg(intensity=2000.0, color=(0.75, 0.75, 0.75))
