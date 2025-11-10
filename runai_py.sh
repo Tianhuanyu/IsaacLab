@@ -27,6 +27,6 @@ fi
 
 # 3) 开训（headless）
 ./isaaclab.sh -p scripts/reinforcement_learning/rl_games/train.py \
-  --task Isaac-Factory-PegInsert-Direct-v0 \
+  --task Isaac-Admittance-PegInsert-Direct-v0\
   --headless \
   --num_envs 2048 2>&1 | tee logs/run_$(date +%Y%m%d_%H%M%S).log
